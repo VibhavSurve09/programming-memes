@@ -1,10 +1,9 @@
 use crate::models;
-use actix_web::{get, HttpResponse, Responder};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 #[get("/")]
-pub async fn get_all_memes() -> impl Responder {
+pub async fn get_all_memes() -> Result<impl Responder> {
     let memes: Vec<models::memes::Meme> = models::memes::Meme::collect_memes().await;
-    println!("Awating {:?}", memes);
-    return HttpResponse::Ok().body("Getting all memes");
+    return Ok(web::Json(memes));
 }
 
 #[get("/random")]
