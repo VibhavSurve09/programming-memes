@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 roux = "2.0.0"
-
-tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros"] }
+actix-web = "4"
+dotenv = "0.15.0"
+serde = { version = "1.0.137", features = ["derive"] }
