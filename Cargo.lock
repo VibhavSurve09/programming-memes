@@ -994,6 +994,7 @@ dependencies = [
  "dotenv",
  "roux",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

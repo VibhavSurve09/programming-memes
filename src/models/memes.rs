@@ -2,11 +2,11 @@ use dotenv;
 use roux::util::{FeedOption, TimePeriod};
 use roux::Subreddit;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use serde_json;
+use std::error;
+use std::fs;
 use std::io::prelude::*;
-use std:::error;
 #[derive(Debug, Deserialize, Serialize)]
-
 pub struct Meme {
     title: String,
     link: String,
@@ -40,7 +40,14 @@ impl Meme {
         return all_memes;
     }
 
-    pub fn cache_response() -> Result<(), Box<dyn error::Error>> {
-        Ok(())
+    pub async fn cache_response() -> Result<Option<Vec<Meme>>, Box<dyn error::Error>> {
+        let mut reponse = fs::File::open("memes.json");
+        if let Ok(file) = reponse {
+            return Ok(None);
+        }
+        let memes_vec = Meme::collect_memes().await;
+        let str = serde_json::to_string(&memes_vec).unwrap();
+        fs::write("memes.json", str);
+        return Ok(Some(memes_vec));
     }
 }
