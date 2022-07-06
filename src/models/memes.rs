@@ -6,6 +6,8 @@ use serde_json;
 use std::error;
 use std::fs;
 use std::io::prelude::*;
+use std::thread;
+use std::time::Duration;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Meme {
     title: String,
@@ -75,6 +77,11 @@ impl Meme {
         let memes_vec = Meme::collect_memes().await;
         let str = serde_json::to_string(&memes_vec).unwrap();
         let output = fs::write("memes.json", str); //If file is not found it creates a file named memes.json
+                                                   //Delete memes.json after a day
+        thread::spawn(|| {
+            thread::sleep(Duration::from_secs(86400));
+            fs::remove_file("memes.json");
+        });
         match output {
             Ok(_) => {
                 return Ok(Some(memes_vec));
