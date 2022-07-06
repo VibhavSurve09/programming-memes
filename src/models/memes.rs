@@ -1,4 +1,5 @@
 use dotenv;
+use regex::Regex;
 use roux::util::{FeedOption, TimePeriod};
 use roux::Subreddit;
 use serde::{Deserialize, Serialize};
@@ -8,10 +9,10 @@ use std::fs;
 use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Meme {
     title: String,
-    link: String,
+    pub link: String,
     is_safe: bool,
 }
 impl Meme {
@@ -23,6 +24,8 @@ impl Meme {
         }
     }
     pub async fn subreddit(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
+        let correct_links = Regex::new(r"^https://i.redd.it/").unwrap();
+
         let hot_options = FeedOption::new().period(TimePeriod::ThisMonth);
         let top_options = FeedOption::new().period(TimePeriod::AllTime);
         let subreddit = Subreddit::new(sub_reddit);
@@ -32,28 +35,25 @@ impl Meme {
         let top = subreddit.top(100, None).await.unwrap().data.children;
         let rising = subreddit.rising(100, None).await.unwrap().data.children;
         for posts in hot {
-            let new_meme = Meme::new_meme(
-                posts.data.title,
-                posts.data.url.unwrap(),
-                posts.data.over_18,
-            );
-            all_memes.push(new_meme);
+            let link = posts.data.url;
+            if correct_links.is_match(link.clone().unwrap().as_str()) {
+                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                all_memes.push(new_meme);
+            }
         }
         for posts in top {
-            let new_meme = Meme::new_meme(
-                posts.data.title,
-                posts.data.url.unwrap(),
-                posts.data.over_18,
-            );
-            all_memes.push(new_meme);
+            let link = posts.data.url;
+            if correct_links.is_match(link.clone().unwrap().as_str()) {
+                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                all_memes.push(new_meme);
+            }
         }
         for posts in rising {
-            let new_meme = Meme::new_meme(
-                posts.data.title,
-                posts.data.url.unwrap(),
-                posts.data.over_18,
-            );
-            all_memes.push(new_meme);
+            let link = posts.data.url;
+            if correct_links.is_match(link.clone().unwrap().as_str()) {
+                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                all_memes.push(new_meme);
+            }
         }
     }
     pub async fn collect_memes() -> Vec<Meme> {
@@ -68,6 +68,11 @@ impl Meme {
         Meme::subreddit(
             &mut all_memes,
             dotenv::var("SUB_REDDIT_2").unwrap().as_str(),
+        )
+        .await;
+        Meme::subreddit(
+            &mut all_memes,
+            dotenv::var("SUB_REDDIT_3").unwrap().as_str(),
         )
         .await;
         return all_memes;
