@@ -74,7 +74,7 @@ impl Meme {
     pub async fn cache_response() -> Result<Option<Vec<Meme>>, std::io::Error> {
         let memes_vec = Meme::collect_memes().await;
         let str = serde_json::to_string(&memes_vec).unwrap();
-        let output = fs::write("memes.json", str);
+        let output = fs::write("memes.json", str); //If file is not found it creates a file named memes.json
         match output {
             Ok(_) => {
                 return Ok(Some(memes_vec));
