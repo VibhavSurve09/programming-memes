@@ -10,44 +10,76 @@ use std::io::prelude::*;
 pub struct Meme {
     title: String,
     link: String,
+    is_safe: bool,
 }
 impl Meme {
-    pub fn new_meme(title: String, link: String) -> Self {
-        Meme { title, link }
+    pub fn new_meme(title: String, link: String, over_18: bool) -> Self {
+        Meme {
+            title,
+            link,
+            is_safe: !over_18,
+        }
     }
-    pub async fn collect_memes() -> Vec<Meme> {
-        let mut all_memes = Vec::new();
-        let hot_options = FeedOption::new().period(TimePeriod::ThisWeek);
+    pub async fn subreddit_1(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
+        let hot_options = FeedOption::new().period(TimePeriod::ThisMonth);
         let top_options = FeedOption::new().period(TimePeriod::AllTime);
-        let subreddit = Subreddit::new(dotenv::var("SUB_REDDIT_1").unwrap().as_str());
+        let subreddit = Subreddit::new(sub_reddit);
         //Hot category
         let hot = subreddit.hot(150, None).await.unwrap().data.children;
         // ALl time top category
         let top = subreddit.top(100, None).await.unwrap().data.children;
         let rising = subreddit.rising(100, None).await.unwrap().data.children;
         for posts in hot {
-            let new_meme = Meme::new_meme(posts.data.title, posts.data.url.unwrap());
+            let new_meme = Meme::new_meme(
+                posts.data.title,
+                posts.data.url.unwrap(),
+                posts.data.over_18,
+            );
             all_memes.push(new_meme);
         }
         for posts in top {
-            let new_meme = Meme::new_meme(posts.data.title, posts.data.url.unwrap());
+            let new_meme = Meme::new_meme(
+                posts.data.title,
+                posts.data.url.unwrap(),
+                posts.data.over_18,
+            );
             all_memes.push(new_meme);
         }
         for posts in rising {
-            let new_meme = Meme::new_meme(posts.data.title, posts.data.url.unwrap());
+            let new_meme = Meme::new_meme(
+                posts.data.title,
+                posts.data.url.unwrap(),
+                posts.data.over_18,
+            );
             all_memes.push(new_meme);
         }
+    }
+    pub async fn collect_memes() -> Vec<Meme> {
+        let mut all_memes = Vec::new();
+        Meme::subreddit_1(
+            &mut all_memes,
+            dotenv::var("SUB_REDDIT_1").unwrap().as_str(),
+        )
+        .await;
+        Meme::subreddit_1(
+            &mut all_memes,
+            dotenv::var("SUB_REDDIT_2").unwrap().as_str(),
+        )
+        .await;
         return all_memes;
     }
 
-    pub async fn cache_response() -> Result<Option<Vec<Meme>>, Box<dyn error::Error>> {
-        let mut reponse = fs::File::open("memes.json");
-        if let Ok(file) = reponse {
-            return Ok(None);
-        }
+    pub async fn cache_response() -> Result<Option<Vec<Meme>>, std::io::Error> {
         let memes_vec = Meme::collect_memes().await;
         let str = serde_json::to_string(&memes_vec).unwrap();
-        fs::write("memes.json", str);
-        return Ok(Some(memes_vec));
+        let output = fs::write("memes.json", str);
+        match output {
+            Ok(_) => {
+                return Ok(Some(memes_vec));
+            }
+            Err(err) => {
+                return Err(err);
+            }
+        }
     }
 }
