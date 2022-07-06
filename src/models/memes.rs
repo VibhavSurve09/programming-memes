@@ -20,7 +20,7 @@ impl Meme {
             is_safe: !over_18,
         }
     }
-    pub async fn subreddit_1(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
+    pub async fn subreddit(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
         let hot_options = FeedOption::new().period(TimePeriod::ThisMonth);
         let top_options = FeedOption::new().period(TimePeriod::AllTime);
         let subreddit = Subreddit::new(sub_reddit);
@@ -56,19 +56,21 @@ impl Meme {
     }
     pub async fn collect_memes() -> Vec<Meme> {
         let mut all_memes = Vec::new();
-        Meme::subreddit_1(
+        // Collects memes from sub_reddit 1
+        Meme::subreddit(
             &mut all_memes,
             dotenv::var("SUB_REDDIT_1").unwrap().as_str(),
         )
         .await;
-        Meme::subreddit_1(
+        // Collects memes from sub_reddit 2
+        Meme::subreddit(
             &mut all_memes,
             dotenv::var("SUB_REDDIT_2").unwrap().as_str(),
         )
         .await;
         return all_memes;
     }
-
+    /// This function is called when memes.json file is not found
     pub async fn cache_response() -> Result<Option<Vec<Meme>>, std::io::Error> {
         let memes_vec = Meme::collect_memes().await;
         let str = serde_json::to_string(&memes_vec).unwrap();
