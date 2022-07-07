@@ -30,9 +30,19 @@ impl Meme {
         let top_options = FeedOption::new().period(TimePeriod::AllTime);
         let subreddit = Subreddit::new(sub_reddit);
         //Hot category
-        let hot = subreddit.hot(150, None).await.unwrap().data.children;
+        let hot = subreddit
+            .hot(150, Some(hot_options))
+            .await
+            .unwrap()
+            .data
+            .children;
         // ALl time top category
-        let top = subreddit.top(100, None).await.unwrap().data.children;
+        let top = subreddit
+            .top(100, Some(top_options))
+            .await
+            .unwrap()
+            .data
+            .children;
         let rising = subreddit.rising(100, None).await.unwrap().data.children;
         for posts in hot {
             let link = posts.data.url;
@@ -73,6 +83,11 @@ impl Meme {
         Meme::subreddit(
             &mut all_memes,
             dotenv::var("SUB_REDDIT_3").unwrap().as_str(),
+        )
+        .await;
+        Meme::subreddit(
+            &mut all_memes,
+            dotenv::var("SUB_REDDIT_4").unwrap().as_str(),
         )
         .await;
         return all_memes;

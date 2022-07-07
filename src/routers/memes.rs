@@ -54,11 +54,15 @@ pub async fn get_random_meme() -> Result<NamedFile> {
         .unwrap();
     let rand_no = generate_random_number();
     let random_meme = res[rand_no as usize].to_owned();
+    let response_image_extension = Path::new(&random_meme.link[18..]).extension().unwrap(); //Extracting image extension to send proper headers in response
+    image_name.push_str(response_image_extension.to_str().unwrap());
     let img = reqwest::get(random_meme.link)
         .await
         .unwrap()
         .bytes()
         .await
         .unwrap();
-    return Ok(NamedFile::open("image.png")?);
+    let mut response_image = File::create(&image_name).unwrap();
+    response_image.write(&img);
+    return Ok(NamedFile::open(image_name)?);
 }
