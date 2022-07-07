@@ -6,16 +6,18 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 fn generate_random_number() -> i32 {
-    let secret_number: i32 = rand::thread_rng().gen_range(0..405);
+    let secret_number: i32 = rand::thread_rng().gen_range(0..219);
     return secret_number;
 }
 #[get("/")]
 pub async fn get_all_memes() -> Result<impl Responder> {
-    let mut file = File::open("memes.json");
+    let file = File::open("memes.json");
     if let Ok(mut file) = file {
         let mut data = String::new();
         file.read_to_string(&mut data).unwrap();
-        let res = serde_json::from_str(data.as_str()).expect("Something went");
+        let res: Vec<models::memes::Meme> =
+            serde_json::from_str(data.as_str()).expect("Something went");
+        println!("Len {:?}", res.len());
         return Ok(web::Json(res));
     }
     let res = models::memes::Meme::cache_response()
@@ -46,6 +48,7 @@ pub async fn get_random_meme() -> Result<NamedFile> {
             .await
             .unwrap();
         response_image.write(&img);
+        println!("Random number is {}", rand_no);
         return Ok(NamedFile::open(image_name)?);
     }
     let res = models::memes::Meme::cache_response()

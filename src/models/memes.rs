@@ -14,13 +14,26 @@ pub struct Meme {
     title: String,
     pub link: String,
     is_safe: bool,
+    subreddit_name: String,
+    up_votes: f64,
+    down_votes: f64,
 }
 impl Meme {
-    pub fn new_meme(title: String, link: String, over_18: bool) -> Self {
+    pub fn new_meme(
+        title: String,
+        link: String,
+        over_18: bool,
+        name: String,
+        ups: f64,
+        down: f64,
+    ) -> Self {
         Meme {
             title,
             link,
             is_safe: !over_18,
+            subreddit_name: name,
+            up_votes: ups,
+            down_votes: down,
         }
     }
     pub async fn subreddit(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
@@ -47,21 +60,42 @@ impl Meme {
         for posts in hot {
             let link = posts.data.url;
             if correct_links.is_match(link.clone().unwrap().as_str()) {
-                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                let new_meme = Meme::new_meme(
+                    posts.data.title,
+                    link.unwrap(),
+                    posts.data.over_18,
+                    posts.data.subreddit,
+                    posts.data.ups,
+                    posts.data.downs,
+                );
                 all_memes.push(new_meme);
             }
         }
         for posts in top {
             let link = posts.data.url;
             if correct_links.is_match(link.clone().unwrap().as_str()) {
-                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                let new_meme = Meme::new_meme(
+                    posts.data.title,
+                    link.unwrap(),
+                    posts.data.over_18,
+                    posts.data.subreddit,
+                    posts.data.ups,
+                    posts.data.downs,
+                );
                 all_memes.push(new_meme);
             }
         }
         for posts in rising {
             let link = posts.data.url;
             if correct_links.is_match(link.clone().unwrap().as_str()) {
-                let new_meme = Meme::new_meme(posts.data.title, link.unwrap(), posts.data.over_18);
+                let new_meme = Meme::new_meme(
+                    posts.data.title,
+                    link.unwrap(),
+                    posts.data.over_18,
+                    posts.data.subreddit,
+                    posts.data.ups,
+                    posts.data.downs,
+                );
                 all_memes.push(new_meme);
             }
         }
