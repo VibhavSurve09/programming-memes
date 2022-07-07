@@ -17,7 +17,6 @@ pub async fn get_all_memes() -> Result<impl Responder> {
         file.read_to_string(&mut data).unwrap();
         let res: Vec<models::memes::Meme> =
             serde_json::from_str(data.as_str()).expect("Something went");
-        println!("Len {:?}", res.len());
         return Ok(web::Json(res));
     }
     let res = models::memes::Meme::cache_response()
@@ -48,7 +47,6 @@ pub async fn get_random_meme() -> Result<NamedFile> {
             .await
             .unwrap();
         response_image.write(&img);
-        println!("Random number is {}", rand_no);
         return Ok(NamedFile::open(image_name)?);
     }
     let res = models::memes::Meme::cache_response()
