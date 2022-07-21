@@ -9,7 +9,10 @@ use std::fs;
 use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
-#[derive(Debug, Deserialize, Serialize, Clone)]
+extern crate redis;
+use redis::Commands;
+use redis_derive::{FromRedisValue, ToRedisArgs};
+#[derive(Debug, Deserialize, Serialize, Clone, ToRedisArgs, FromRedisValue)]
 pub struct Meme {
     title: String,
     pub link: String,
@@ -127,22 +130,28 @@ impl Meme {
         return all_memes;
     }
     /// This function is called when memes.json file is not found
-    pub async fn cache_response() -> Result<Option<Vec<Meme>>, std::io::Error> {
+    pub async fn cache_response() -> Option<Vec<Meme>> {
         let memes_vec = Meme::collect_memes().await;
-        let str = serde_json::to_string(&memes_vec).unwrap();
-        let output = fs::write("memes.json", str); //If file is not found it creates a file named memes.json
-                                                   //Delete memes.json after a day
-        thread::spawn(|| {
-            thread::sleep(Duration::from_secs(86400));
-            fs::remove_file("memes.json");
-        });
-        match output {
-            Ok(_) => {
-                return Ok(Some(memes_vec));
-            }
-            Err(err) => {
-                return Err(err);
-            }
-        }
+        // let str = serde_json::to_string(&memes_vec).unwrap();
+        // let output = fs::write("memes.json", str); //If file is not found it creates a file named memes.json
+        //                                            //Delete memes.json after a day
+        // thread::spawn(|| {
+        //     thread::sleep(Duration::from_secs(86400));
+        //     fs::remove_file("memes.json");
+        // });
+        // match output {
+        //     Ok(_) => {
+        //         return Ok(Some(memes_vec));
+        //     }
+        //     Err(err) => {
+        //         return Err(err);
+        //     }
+        // }
+        let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
+        let con_uri = dotenv::var("REDIS").unwrap();
+        let client = redis::Client::open(con_uri).unwrap();
+        let mut con = client.get_connection().unwrap();
+        let _: () = con.set("all_memes", memes_string_vec).unwrap();
+        Some(memes_vec)
     }
 }
