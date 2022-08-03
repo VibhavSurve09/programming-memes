@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(connection.clone())
             .service(routers::memes::get_all_memes)
-        // .service(routers::memes::get_random_meme)
+            .service(routers::memes::get_random_meme)
     })
     .bind((dotenv::var("HOST").unwrap(), 8000))?
     .run()

@@ -131,24 +131,9 @@ impl Meme {
         .await;
         return all_memes;
     }
-    /// This function is called when memes.json file is not found
+    //it takes 16 seconds
     pub async fn cache_response() -> Option<Vec<Meme>> {
         let memes_vec = Meme::collect_memes().await;
-        // let str = serde_json::to_string(&memes_vec).unwrap();
-        // let output = fs::write("memes.json", str); //If file is not found it creates a file named memes.json
-        //                                            //Delete memes.json after a day
-        // thread::spawn(|| {
-        //     thread::sleep(Duration::from_secs(86400));
-        //     fs::remove_file("memes.json");
-        // });
-        // match output {
-        //     Ok(_) => {
-        //         return Ok(Some(memes_vec));
-        //     }
-        //     Err(err) => {
-        //         return Err(err);
-        //     }
-        // }
         let time_to_live: usize = 20;
         let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();

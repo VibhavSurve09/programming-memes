@@ -31,44 +31,44 @@ pub async fn get_all_memes(
     }
 }
 
-// #[get("/random")]
-// pub async fn get_random_meme() -> Result<NamedFile> {
-//     let mut image_name: String = String::from("image.");
-//     let file = File::open("memes.json");
-//     if let Ok(mut file) = file {
-//         let mut data = String::new();
-//         file.read_to_string(&mut data).unwrap();
-//         let res: Vec<models::memes::Meme> =
-//             serde_json::from_str(data.as_str()).expect("Something went");
-//         let rand_no = generate_random_number();
-//         let random_meme = res[rand_no as usize].to_owned();
-//         let response_image_extension = Path::new(&random_meme.link[18..]).extension().unwrap(); //Extracting image extension to send proper headers in response
-//         image_name.push_str(response_image_extension.to_str().unwrap());
-//         let mut response_image = File::create(&image_name).unwrap();
-//         let img = reqwest::get(&random_meme.link)
-//             .await
-//             .unwrap()
-//             .bytes()
-//             .await
-//             .unwrap();
-//         response_image.write(&img);
-//         return Ok(NamedFile::open(image_name)?);
-//     }
-//     let res = models::memes::Meme::cache_response()
-//         .await
-//         .unwrap()
-//         .unwrap();
-//     let rand_no = generate_random_number();
-//     let random_meme = res[rand_no as usize].to_owned();
-//     let response_image_extension = Path::new(&random_meme.link[18..]).extension().unwrap(); //Extracting image extension to send proper headers in response
-//     image_name.push_str(response_image_extension.to_str().unwrap());
-//     let img = reqwest::get(random_meme.link)
-//         .await
-//         .unwrap()
-//         .bytes()
-//         .await
-//         .unwrap();
-//     let mut response_image = File::create(&image_name).unwrap();
-//     response_image.write(&img);
-//     return Ok(NamedFile::open(image_name)?);
-// }
+#[get("/random")]
+pub async fn get_random_meme(connection: web::Data<Mutex<redis::Connection>>) -> Result<NamedFile> {
+    let mut image_name: String = String::from("image.");
+    let mut con = connection.lock().unwrap();
+    let resp: Result<String, redis::RedisError> = con.get("all_memes");
+    match resp {
+        Ok(res) => {
+            let res: Vec<models::memes::Meme> =
+                serde_json::from_str(res.as_str()).expect("Something went");
+            let rand_no = generate_random_number();
+            let random_meme = res[rand_no as usize].to_owned();
+            let response_image_extension = Path::new(&random_meme.link[18..]).extension().unwrap(); //Extracting image extension to send proper headers in response
+            image_name.push_str(response_image_extension.to_str().unwrap());
+            let mut response_image = File::create(&image_name).unwrap();
+            let img = reqwest::get(&random_meme.link)
+                .await
+                .unwrap()
+                .bytes()
+                .await
+                .unwrap();
+            response_image.write(&img);
+            return Ok(NamedFile::open(image_name)?);
+        }
+        _ => {
+            let res = models::memes::Meme::cache_response().await.unwrap();
+            let rand_no = generate_random_number();
+            let random_meme = res[rand_no as usize].to_owned();
+            let response_image_extension = Path::new(&random_meme.link[18..]).extension().unwrap(); //Extracting image extension to send proper headers in response
+            image_name.push_str(response_image_extension.to_str().unwrap());
+            let img = reqwest::get(random_meme.link)
+                .await
+                .unwrap()
+                .bytes()
+                .await
+                .unwrap();
+            let mut response_image = File::create(&image_name).unwrap();
+            response_image.write(&img);
+            return Ok(NamedFile::open(image_name)?);
+        }
+    }
+}
