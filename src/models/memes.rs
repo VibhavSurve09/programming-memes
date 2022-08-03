@@ -149,13 +149,13 @@ impl Meme {
         //         return Err(err);
         //     }
         // }
-        let TIME_TO_LIVE: usize = 2 * 60 * 60;
+        let time_to_live: usize = 20;
         let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();
         let mut con = client.get_connection().unwrap();
         let _: () = con.set("all_memes", memes_string_vec).unwrap();
-        let _: () = con.expire("all_memes", TIME_TO_LIVE).unwrap();
+        let _: () = con.expire("all_memes", time_to_live).unwrap();
         Some(memes_vec)
     }
 }
