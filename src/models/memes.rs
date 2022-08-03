@@ -13,6 +13,7 @@ extern crate redis;
 use redis::Commands;
 use redis_derive::{FromRedisValue, ToRedisArgs};
 #[derive(Debug, Deserialize, Serialize, Clone, ToRedisArgs, FromRedisValue)]
+
 pub struct Meme {
     title: String,
     pub link: String,
@@ -39,6 +40,7 @@ impl Meme {
             down_votes: down,
         }
     }
+
     pub async fn subreddit(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
         let correct_links = Regex::new(r"^https://i.redd.it/").unwrap();
 
@@ -147,11 +149,13 @@ impl Meme {
         //         return Err(err);
         //     }
         // }
+        let TIME_TO_LIVE: usize = 2 * 60 * 60;
         let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();
         let mut con = client.get_connection().unwrap();
         let _: () = con.set("all_memes", memes_string_vec).unwrap();
+        let _: () = con.expire("all_memes", TIME_TO_LIVE).unwrap();
         Some(memes_vec)
     }
 }
