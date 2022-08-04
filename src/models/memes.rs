@@ -11,8 +11,8 @@ use std::thread;
 use std::time::Duration;
 extern crate redis;
 use redis::Commands;
-use redis_derive::{FromRedisValue, ToRedisArgs};
-#[derive(Debug, Deserialize, Serialize, Clone, ToRedisArgs, FromRedisValue)]
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 
 pub struct Meme {
     title: String,
@@ -134,7 +134,7 @@ impl Meme {
     //it takes 16 seconds
     pub async fn cache_response() -> Option<Vec<Meme>> {
         let memes_vec = Meme::collect_memes().await;
-        let time_to_live: usize = 20;
+        let time_to_live: usize = 4 * 60 * 60;
         let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();

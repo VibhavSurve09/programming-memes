@@ -1407,8 +1407,7 @@ dependencies = [
  "actix-web",
  "dotenv",
  "rand",
- "redis 0.17.0",
- "redis-derive",
+ "redis",
  "regex",
  "reqwest",
  "roux",
@@ -1435,33 +1434,6 @@ dependencies = [
  "tokio 0.2.25",
  "tokio-util 0.3.1",
  "url",
-]
-
-[[package]]
-name = "redis"
-version = "0.21.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a80b5f38d7f5a020856a0e16e40a9cfabf88ae8f0e4c2dcd8a3114c1e470852"
-dependencies = [
- "async-trait",
- "combine",
- "dtoa",
- "itoa 0.4.8",
- "percent-encoding",
- "sha1 0.6.1",
- "url",
-]
-
-[[package]]
-name = "redis-derive"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "272596dc88e664ab28f15a6c4561a9928c4b41585be7b692305a2267ef57ba1e"
-dependencies = [
- "quote",
- "redis 0.21.5",
- "serde",
- "syn",
 ]
 
 [[package]]
