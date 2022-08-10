@@ -13,7 +13,7 @@ BASE_URL: https://memes.hellomemes.workers.dev
   GET /
 ```
 ```http
-curl --request GET https://memes.hellomemes.workers.dev/
+curl --request GET http://152.67.11.203:8000/
 ```
 
 Example response:
