@@ -18,7 +18,10 @@ async fn main() -> std::io::Result<()> {
             .service(routers::memes::get_all_memes)
             .service(routers::memes::get_random_meme)
     })
-    .bind((dotenv::var("HOST").unwrap(), 8000))?
+    .bind((
+        dotenv::var("HOST").unwrap(),
+        dotenv::var("PORT").unwrap().parse::<u16>().unwrap(),
+    ))?
     .run()
     .await
 }
