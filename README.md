@@ -7,7 +7,7 @@ Well who doesn't like memes?
 #### Get all memes
 
 ```
-BASE_URL: https://memes.hellomemes.workers.dev
+BASE_URL: http://152.67.11.203:8000/
 ```
 ```http
   GET /
