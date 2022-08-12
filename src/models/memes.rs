@@ -129,7 +129,7 @@ impl Meme {
     pub async fn cache_response() -> Option<Vec<Meme>> {
         let memes_vec = Arc::try_unwrap(Meme::collect_memes()).unwrap();
         let memes = memes_vec.into_inner().unwrap();
-        let time_to_live: usize = 10;
+        let time_to_live: usize = 4 * 60 * 60;
         let memes_string_vec = serde_json::to_string(&memes).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();
