@@ -7,6 +7,7 @@ use serde_json;
 use std::error;
 use std::fs;
 use std::io::prelude::*;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 extern crate redis;
@@ -41,27 +42,19 @@ impl Meme {
         }
     }
 
-    pub async fn subreddit(all_memes: &mut Vec<Meme>, sub_reddit: &str) {
+    pub fn subreddit(all_memes: Arc<Mutex<Vec<Meme>>>, sub_reddit: &str) {
         let correct_links = Regex::new(r"^https://i.redd.it/").unwrap();
 
         let hot_options = FeedOption::new().period(TimePeriod::ThisMonth);
         let top_options = FeedOption::new().period(TimePeriod::AllTime);
         let subreddit = Subreddit::new(sub_reddit);
         //Hot category
-        let hot = subreddit
-            .hot(150, Some(hot_options))
-            .await
-            .unwrap()
-            .data
-            .children;
+        let hot = subreddit.hot(150, Some(hot_options)).unwrap().data.children;
         // ALl time top category
-        let top = subreddit
-            .top(100, Some(top_options))
-            .await
-            .unwrap()
-            .data
-            .children;
-        let rising = subreddit.rising(100, None).await.unwrap().data.children;
+
+        let top = subreddit.top(100, Some(top_options)).unwrap().data.children;
+
+        let rising = subreddit.rising(100, None).unwrap().data.children;
         for posts in hot {
             let link = posts.data.url;
             if correct_links.is_match(link.clone().unwrap().as_str()) {
@@ -73,7 +66,7 @@ impl Meme {
                     posts.data.ups,
                     posts.data.downs,
                 );
-                all_memes.push(new_meme);
+                all_memes.lock().unwrap().push(new_meme);
             }
         }
         for posts in top {
@@ -87,7 +80,7 @@ impl Meme {
                     posts.data.ups,
                     posts.data.downs,
                 );
-                all_memes.push(new_meme);
+                all_memes.lock().unwrap().push(new_meme);
             }
         }
         for posts in rising {
@@ -101,46 +94,48 @@ impl Meme {
                     posts.data.ups,
                     posts.data.downs,
                 );
-                all_memes.push(new_meme);
+                all_memes.lock().unwrap().push(new_meme);
             }
         }
     }
-    pub async fn collect_memes() -> Vec<Meme> {
-        let mut all_memes = Vec::new();
+    pub fn collect_memes() -> Arc<Mutex<Vec<Meme>>> {
+        let mut all_memes = Arc::new(Mutex::new(Vec::new()));
         // Collects memes from sub_reddit 1
-        Meme::subreddit(
-            &mut all_memes,
-            dotenv::var("SUB_REDDIT_1").unwrap().as_str(),
-        )
-        .await;
+        let memes1 = Arc::clone(&all_memes);
+        let h1 = thread::spawn(move || {
+            Meme::subreddit(memes1, dotenv::var("SUB_REDDIT_1").unwrap().as_str());
+        });
+        h1.join().unwrap();
         // Collects memes from sub_reddit 2
-        Meme::subreddit(
-            &mut all_memes,
-            dotenv::var("SUB_REDDIT_2").unwrap().as_str(),
-        )
-        .await;
-        Meme::subreddit(
-            &mut all_memes,
-            dotenv::var("SUB_REDDIT_3").unwrap().as_str(),
-        )
-        .await;
-        Meme::subreddit(
-            &mut all_memes,
-            dotenv::var("SUB_REDDIT_4").unwrap().as_str(),
-        )
-        .await;
+        let memes2 = Arc::clone(&all_memes);
+        let h2 = thread::spawn(move || {
+            Meme::subreddit(memes2, dotenv::var("SUB_REDDIT_2").unwrap().as_str());
+        });
+
+        let memes3 = Arc::clone(&all_memes);
+        let h3 = thread::spawn(move || {
+            Meme::subreddit(memes3, dotenv::var("SUB_REDDIT_3").unwrap().as_str());
+        });
+        let memes4 = Arc::clone(&all_memes);
+        let h4 = thread::spawn(move || {
+            Meme::subreddit(memes4, dotenv::var("SUB_REDDIT_4").unwrap().as_str());
+        });
+        h2.join().unwrap();
+        h3.join().unwrap();
+        h4.join().unwrap();
         return all_memes;
     }
     //it takes 16 seconds
     pub async fn cache_response() -> Option<Vec<Meme>> {
-        let memes_vec = Meme::collect_memes().await;
-        let time_to_live: usize = 4 * 60 * 60;
-        let memes_string_vec = serde_json::to_string(&memes_vec).unwrap();
+        let memes_vec = Arc::try_unwrap(Meme::collect_memes()).unwrap();
+        let memes = memes_vec.into_inner().unwrap();
+        let time_to_live: usize = 10;
+        let memes_string_vec = serde_json::to_string(&memes).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();
         let mut con = client.get_connection().unwrap();
         let _: () = con.set("all_memes", memes_string_vec).unwrap();
         let _: () = con.expire("all_memes", time_to_live).unwrap();
-        Some(memes_vec)
+        Some(memes)
     }
 }

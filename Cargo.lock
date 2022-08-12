@@ -766,10 +766,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b7abd5d659d9b90c8cba917f6ec750a74e2dc23902ef9cd4cc8c8b22e6036a"
 dependencies = [
  "futures-core",
+ "futures-io",
  "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite 0.2.9",
  "pin-utils",
+ "slab",
 ]
 
 [[package]]
@@ -1766,6 +1769,7 @@ dependencies = [
  "libc",
  "memchr",
  "mio 0.8.4",
+ "num_cpus",
  "once_cell",
  "parking_lot",
  "pin-project-lite 0.2.9",
