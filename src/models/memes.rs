@@ -52,7 +52,7 @@ impl Meme {
         let hot = subreddit.hot(150, Some(hot_options)).unwrap().data.children;
         // ALl time top category
 
-        let top = subreddit.top(100, Some(top_options)).unwrap().data.children;
+        let top = subreddit.top(20, Some(top_options)).unwrap().data.children;
 
         for posts in hot {
             let link = posts.data.url;
@@ -90,7 +90,6 @@ impl Meme {
         let h1 = thread::spawn(move || {
             Meme::subreddit(memes1, dotenv::var("SUB_REDDIT_1").unwrap().as_str());
         });
-        h1.join().unwrap();
         // Collects memes from sub_reddit 2
         let memes2 = Arc::clone(&all_memes);
         let h2 = thread::spawn(move || {
@@ -105,16 +104,16 @@ impl Meme {
         let h4 = thread::spawn(move || {
             Meme::subreddit(memes4, dotenv::var("SUB_REDDIT_4").unwrap().as_str());
         });
+        h1.join().unwrap();
         h2.join().unwrap();
         h3.join().unwrap();
         h4.join().unwrap();
         return all_memes;
     }
-    //it takes 16 seconds
     pub async fn cache_response() -> Option<Vec<Meme>> {
         let memes_vec = Arc::try_unwrap(Meme::collect_memes()).unwrap();
         let memes = memes_vec.into_inner().unwrap();
-        let time_to_live: usize = 6 * 60 * 60;
+        let time_to_live: usize = 4 * 60 * 60;
         let memes_string_vec = serde_json::to_string(&memes).unwrap();
         let con_uri = dotenv::var("REDIS").unwrap();
         let client = redis::Client::open(con_uri).unwrap();
